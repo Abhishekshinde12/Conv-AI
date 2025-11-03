@@ -145,14 +145,14 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "id",
     "SIGNING_KEY": SECRET_KEY
 }
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:5173', 'localhost:8000']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # when set true cookies will be allowed in the cross-site HTTP request
 CORS_ALLOW_CREDENTIALS = True
 
@@ -163,18 +163,6 @@ CORS_ALLOWED_ORIGINS = [
 # as for django uses CSRF tokens in certain request, hence to handle them along with CORS, we need to setup this
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
-]
-# non-standard HTTP headers that are allowed in the requests
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
 ]
 
 # ASGI_APPLICATION = 'backend.asgi.application'

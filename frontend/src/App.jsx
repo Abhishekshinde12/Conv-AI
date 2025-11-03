@@ -1,33 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import Login from './components/Login'
+import Register from './components/Register'
+import {Routes, Route} from 'react-router-dom'
+import Home  from './components/Home'
+import ProtectedRoutes from './components/ProtectedRoutes'
+import { useEffect } from 'react'
+import useAuthStore from '../store/authStore'
+import Customer from './components/Customer'
+import Representative from './components/Representative'
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const isAuthLoading = useAuthStore((state) => state.isAuthLoading);
 
+  // initializing the auth state when the user first comes
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]); // Run only once on mount
+
+  // Display a loading indicator while authentication status is being determined
+  if (isAuthLoading) {
+    return <div>Loading authentication...</div>;
+  }
+  
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Routes>
+        <Route path='/login' element={<Login />} />
+        <Route path='/register' element={<Register />} />
+
+        {/* 
+          Protected Routes
+          is user authenticated then only visible
+          */}
+        <Route element={<ProtectedRoutes />} >
+          <Route path='/' element={<Home />} />
+          <Route path='/customer' element={<Customer />} />
+          <Route path='/representative' element={<Representative />} />
+        </Route>
+        
+        
+      </Routes>
     </>
   )
 }
