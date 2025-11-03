@@ -35,12 +35,9 @@ function App() {
           is user authenticated then only visible
           */}
         <Route element={<ProtectedRoutes />} >
-          <Route path='/' element={<Home />} />
           <Route path='/customer' element={<Customer />} />
           <Route path='/representative' element={<Representative />} />
         </Route>
-        
-        
       </Routes>
     </>
   )

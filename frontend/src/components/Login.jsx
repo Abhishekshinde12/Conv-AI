@@ -7,6 +7,7 @@ import useAuthStore from "../../store/authStore";
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const login = useAuthStore((state) => state.login)
+  const {user} = useAuthStore()
 
   const navigate = useNavigate()
 
@@ -18,10 +19,14 @@ export default function Login() {
     e.preventDefault();
 
     try{
-      const response = await login({...formData})
-      if(response.ok){
-        navigate('/')
-      } 
+      await login({...formData})
+      console.log(user)
+      if(user.user_type === 'customer'){
+        navigate('/customer')
+      }
+      else{
+        navigate('/representative')
+      }
     }
     catch(error){
       console.error(error)
