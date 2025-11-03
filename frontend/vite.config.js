@@ -12,6 +12,17 @@ export default defineConfig({
         changeOrigin: true, // Needed for virtual hosting
         secure: false, // Don't check SSL certs for local development
       },
+      '/chat': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/ws': {
+        target: 'ws://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        ws: true, 
+      },
     }
   }
 })

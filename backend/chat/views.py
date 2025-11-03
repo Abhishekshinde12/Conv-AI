@@ -37,4 +37,4 @@ class GetConversationIdAPIView(generics.RetrieveAPIView):
 
         # create id 
 
-        return Response({'representative_id': str(conversation.id)}, status=status.HTTP_200_OK)
+        return Response({'conversation_id': str(conversation.id)}, status=status.HTTP_200_OK)
