@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import useAuthStore from '../store/authStore'
 import Customer from './components/Customer'
 import Representative from './components/Representative'
+import RoleBasedRouting from './components/RoleBasedRouting'
 
 
 function App() {
@@ -35,9 +36,12 @@ function App() {
           is user authenticated then only visible
           */}
         <Route element={<ProtectedRoutes />} >
-          <Route path='/customer' element={<Customer />} />
-          <Route path='/representative' element={<Representative />} />
+          <Route element={<RoleBasedRouting /> }>
+            <Route path='/customer' element={<Customer />} />
+            <Route path='/representative' element={<Representative />} />
+          </Route>
         </Route>
+
       </Routes>
     </>
   )
