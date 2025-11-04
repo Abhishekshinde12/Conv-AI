@@ -3,6 +3,7 @@ import { Users, Send, MessageSquare, TrendingUp, Clock, AlertTriangle } from "lu
 import { useChatStore } from "../../store/chatStore";
 import { useSocketStore } from "../../store/socketStore";
 import useAuthStore from "../../store/authStore";
+import api from "../utils/api";
 
 const Representative = () => {
   const { messages, activeConversationId, setActiveConversation } = useChatStore();
@@ -13,6 +14,15 @@ const Representative = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [text, setText] = useState("");
   const messageEndRef = useRef(null);
+
+  const [analytics, setAnalytics] = useState({
+    "summary": null,
+    "sentiment": null,
+    "loan_type": null,
+    "lead_type": null,
+    "rationale": null
+  })
+
 
   // Fetch connected users when the component mounts
   useEffect(() => {
@@ -39,18 +49,52 @@ const Representative = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages[activeConversationId]]);
 
-  // --- FIX: SIMPLIFY THE CLICK HANDLER ---
+  const fetchAnalytics = async (conversationId) => {
+    try {
+      const response = await api(`/analytics/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json", // ✅ REQUIRED
+          },
+          body: JSON.stringify({messages: messages[conversationId] || []})
+      });
+      const data = await response.json();
+      setAnalytics({
+        summary: data.summary,
+        sentiment: data.sentiment,
+        loan_type: data.loan_type,
+        lead_type: data.lead_type,
+        rationale: data.rationale,
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      setAnalytics({
+        summary: null,
+        sentiment: null,
+        loan_type: null,
+        lead_type: null,
+        rationale: null,
+      });
+    }
+  };
+
   // Its only job is to update state. The useEffect above will handle the connection.
-  const handleSelectChat = (chat) => {
+  const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
     setActiveConversation(chat.conversation_id);
+
+    // to get analytics when re-loading previous chats
+    // await fetchAnalytics(chat.conversation_id)
   };
 
   // Send message
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!text.trim() || !activeConversationId) return;
     sendMessage(activeConversationId, user.user_id, text.trim());
     setText("");
+    // for real time analytics
+    await fetchAnalytics(activeConversationId)
   };
 
   const chatMessages = activeConversationId ? messages[activeConversationId] || [] : [];
@@ -65,11 +109,10 @@ const Representative = () => {
             Active Chats
           </h2>
           <span
-            className={`text-xs font-medium ${
-              connectionStatus === "connected"
+            className={`text-xs font-medium ${connectionStatus === "connected"
                 ? "text-green-500"
                 : "text-red-500"
-            }`}
+              }`}
           >
             {connectionStatus === "connected" ? "Online" : "Offline"}
           </span>
@@ -86,11 +129,10 @@ const Representative = () => {
             <div
               key={chat.conversation_id}
               onClick={() => handleSelectChat(chat)}
-              className={`p-4 cursor-pointer border-b hover:bg-indigo-50 transition ${
-                selectedChat?.conversation_id === chat.conversation_id
+              className={`p-4 cursor-pointer border-b hover:bg-indigo-50 transition ${selectedChat?.conversation_id === chat.conversation_id
                   ? "bg-indigo-100 border-indigo-500 border-l-4"
                   : "border-l-4 border-transparent"
-              }`}
+                }`}
             >
               <p className="font-semibold text-gray-800">{chat.user_name}</p>
             </div>
@@ -120,18 +162,16 @@ const Representative = () => {
                 chatMessages.map((message, index) => (
                   <div
                     key={index}
-                    className={`flex ${
-                      message.sender === user.user_id
+                    className={`flex ${message.sender === user.user_id
                         ? "justify-end"
                         : "justify-start"
-                    }`}
+                      }`}
                   >
                     <div
-                      className={`max-w-md px-4 py-2 rounded-xl shadow-md ${
-                        message.sender === user.user_id
+                      className={`max-w-md px-4 py-2 rounded-xl shadow-md ${message.sender === user.user_id
                           ? "bg-indigo-600 text-white rounded-br-none"
                           : "bg-white text-gray-800 rounded-tl-none border border-gray-200"
-                      }`}
+                        }`}
                     >
                       <p className="text-sm">{message.text}</p>
                     </div>
@@ -154,11 +194,10 @@ const Representative = () => {
                 <button
                   onClick={handleSend}
                   disabled={connectionStatus !== "connected"}
-                  className={`p-3 rounded-lg text-white transition duration-150 shadow-md ${
-                    connectionStatus === "connected"
+                  className={`p-3 rounded-lg text-white transition duration-150 shadow-md ${connectionStatus === "connected"
                       ? "bg-indigo-600 hover:bg-indigo-700"
                       : "bg-gray-400 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -173,35 +212,62 @@ const Representative = () => {
       </main>
 
       {/* ---- RIGHT ANALYTICS PANEL ---- */}
-      <aside className="w-1/4 bg-gray-50 border-l border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-indigo-600" />
-          Analytics
+      <aside className="w-1/3 bg-gray-50 border-l border-gray-200 p-6 overflow-y-auto">
+        <h2 className="text-base font-bold text-gray-800 mb-6 flex items-center">
+          {/* <FileText className="w-5 h-5 mr-2 text-indigo-600" /> */}
+          Chat Analytics
         </h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-5">
+          {/* Summary */}
           <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <Clock className="w-5 h-5 text-indigo-600 mb-2" />
-            <p className="text-2xl font-semibold text-gray-800">12</p>
-            <p className="text-sm text-gray-500">Active Chats</p>
+            {/* <FileText className="w-5 h-5 text-indigo-600 mb-2" /> */}
+            <p className="text-base text-gray-500 mb-1 font-bold">Summary</p>
+            <p className="text-gray-800 text-base leading-relaxed font-medium">
+              {analytics.summary || "No summary available yet."}
+            </p>
           </div>
 
-          <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <MessageSquare className="w-5 h-5 text-indigo-600 mb-2" />
-            <p className="text-2xl font-semibold text-gray-800">156</p>
-            <p className="text-sm text-gray-500">Messages Today</p>
+          {/* Sentiment */}
+          <div className="p-4 bg-white rounded-xl shadow-sm border flex items-center justify-between">
+            <div>
+              {/* <Smile className="w-5 h-5 text-indigo-600 mb-2" /> */}
+              <p className="text-base text-gray-500 mb-1 font-bold">Sentiment</p>
+              {/* <p className={`text-lg font-semibold capitalize ${sentimentColor}`}> */}
+              <p className={`text-base font-medium capitalize`}>
+                {analytics.sentiment || "No details"}
+              </p>
+            </div>
           </div>
 
+          {/* Loan Type */}
           <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <Users className="w-5 h-5 text-indigo-600 mb-2" />
-            <p className="text-2xl font-semibold text-gray-800">42</p>
-            <p className="text-sm text-gray-500">Unique Users</p>
+            {/* <Briefcase className="w-5 h-5 text-indigo-600 mb-2" /> */}
+            <p className="text-base text-gray-500 mb-1 font-bold">Loan Type</p>
+            <p className="text-gray-800 text-base capitalize font-medium">
+              {analytics.loan_type || "No details"}
+            </p>
           </div>
 
+          {/* Lead Type */}
           <div className="p-4 bg-white rounded-xl shadow-sm border">
-            <AlertTriangle className="w-5 h-5 text-indigo-600 mb-2" />
-            <p className="text-2xl font-semibold text-gray-800">3</p>
-            <p className="text-sm text-gray-500">Pending Issues</p>
+            {/* <Flame className="w-5 h-5 text-indigo-600 mb-2" /> */}
+            <p className="text-base text-gray-500 mb-1 font-bold">Lead Type</p>
+            <span
+              // className={`px-3 py-1 rounded-full text-sm font-medium ${leadColor}`}
+              className={`rounded-full text-base font-medium capitalize`}
+            >
+              {analytics.lead_type || "No details"}
+            </span>
+          </div>
+
+          {/* Rationale */}
+          <div className="p-4 bg-white rounded-xl shadow-sm border">
+            {/* <Info className="w-5 h-5 text-indigo-600 mb-2" /> */}
+            <p className="text-base text-gray-500 mb-1 font-bold">Rationale</p>
+            <p className="text-gray-800 text-base leading-relaxed font-medium">
+              {analytics.rationale || "No rationale available."}
+            </p>
           </div>
         </div>
       </aside>

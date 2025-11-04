@@ -9,7 +9,7 @@ const Customer = () => {
   const { messages, addMessage, activeConversationId, setActiveConversation } = useChatStore();
   const { connect, sendMessage, connectionStatus, getConversationID } = useSocketStore();
   const {user, accessToken} = useAuthStore()
-  const [conversationId, setConversationId] = useState("")
+  // const [conversationId, setConversationId] = useState("")
 
   const [text, setText] = useState("");
   const messageEndRef = useRef(null);
@@ -24,7 +24,7 @@ const Customer = () => {
           const convId = await getConversationID(user.user_id);
           if (convId) {
             // Once we have the ID, set it in our local state.
-            setConversationId(convId);
+            setActiveConversation(convId);
             // NOW, connect to the websocket with the guaranteed ID.
             connect(convId, accessToken);
           } else {
@@ -42,16 +42,16 @@ const Customer = () => {
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages[conversationId]]);
+  }, [messages[activeConversationId]]);
 
   // Handle sending a message
   const handleSend = () => {
     if (!text.trim()) return;
-    sendMessage(conversationId, user.user_id, text.trim());
+    sendMessage(activeConversationId, user.user_id, text.trim());
     setText("");
   };
 
-  const chatMessages = messages[conversationId] || [];
+  const chatMessages = messages[activeConversationId] || [];
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 antialiased">
