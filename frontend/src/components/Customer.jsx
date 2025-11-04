@@ -5,25 +5,39 @@ import { useChatStore } from "../../store/chatStore";
 import { useSocketStore } from "../../store/socketStore";
 import useAuthStore from "../../store/authStore";
 
-const Customer = ({ userId, token, conversationId }) => {
+const Customer = () => {
   const { messages, addMessage, activeConversationId, setActiveConversation } = useChatStore();
   const { connect, sendMessage, connectionStatus, getConversationID } = useSocketStore();
   const {user, accessToken} = useAuthStore()
+  const [conversationId, setConversationId] = useState("")
 
   const [text, setText] = useState("");
   const messageEndRef = useRef(null);
 
   // Connect WebSocket and set conversation on mount
   useEffect(() => {
-    async function fetchConvID (){
-      const conv_id = await getConversationID(user.user_id);
-      console.log(conv_id)
-      await connect(conv_id, accessToken)
+    // Only run this effect if we have the user and token.
+    if (user?.user_id && accessToken) {
+      const initializeChat = async () => {
+        try {
+          // First, fetch the conversation ID and wait for it.
+          const convId = await getConversationID(user.user_id);
+          if (convId) {
+            // Once we have the ID, set it in our local state.
+            setConversationId(convId);
+            // NOW, connect to the websocket with the guaranteed ID.
+            connect(convId, accessToken);
+          } else {
+            console.error("Failed to get a conversation ID.");
+          }
+        } catch (error) {
+          console.error("Error initializing chat:", error);
+        }
+      };
+      initializeChat();
     }
-    fetchConvID()
-
-    // setActiveConversation(getConversationID);
-  }, [userId, token, conversationId, connect, setActiveConversation]);
+    // This effect should only re-run if the user or token changes.
+  }, [user?.user_id, accessToken, getConversationID, connect]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -33,7 +47,7 @@ const Customer = ({ userId, token, conversationId }) => {
   // Handle sending a message
   const handleSend = () => {
     if (!text.trim()) return;
-    sendMessage(conversationId, userId, text.trim());
+    sendMessage(conversationId, user.user_id, text.trim());
     setText("");
   };
 
@@ -70,12 +84,12 @@ const Customer = ({ userId, token, conversationId }) => {
           <div
             key={index}
             className={`flex ${
-              message.sender === userId ? "justify-end" : "justify-start"
+              message.sender === user.user_id ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl text-white shadow-lg ${
-                message.sender === userId
+                message.sender === user.user_id
                   ? "bg-indigo-600 rounded-br-none"
                   : "bg-gray-600 rounded-tl-none"
               }`}

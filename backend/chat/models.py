@@ -13,7 +13,7 @@ class Conversation(models.Model):
 
 
     def __str__(self):
-        return f"Conversation ID : {self.conversation_id} between {self.user1_id} and {self.user2_id}"
+        return f"Conversation ID : {self.id} between {self.user1_id} and {self.user2_id}"
     
 
 class Messages(models.Model):
@@ -27,4 +27,4 @@ class Messages(models.Model):
         ordering = ['created_at',]
 
     def __str__(self):
-        return "Message ID : {self.message_id}"
+        return "Message ID : {self.id}"
