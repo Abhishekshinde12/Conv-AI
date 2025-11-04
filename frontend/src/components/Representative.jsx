@@ -1,25 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  Users,
-  Send,
-  MessageSquare,
-  TrendingUp,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { Users, Send, MessageSquare, TrendingUp, Clock, AlertTriangle } from "lucide-react";
 import { useChatStore } from "../../store/chatStore";
 import { useSocketStore } from "../../store/socketStore";
 import useAuthStore from "../../store/authStore";
 
 const Representative = () => {
-  const { messages, addMessage, activeConversationId, setActiveConversation } =
-    useChatStore();
-  const {
-    connect,
-    sendMessage,
-    connectionStatus,
-    getConnectedUsers,
-  } = useSocketStore();
+  const { messages, activeConversationId, setActiveConversation } = useChatStore();
+  const { connect, sendMessage, connectionStatus, getConnectedUsers } = useSocketStore();
   const { user, accessToken } = useAuthStore();
 
   const [activeConversations, setActiveConversations] = useState([]);
@@ -27,43 +14,46 @@ const Representative = () => {
   const [text, setText] = useState("");
   const messageEndRef = useRef(null);
 
-  // ✅ Fetch connected users when component mounts
+  // Fetch connected users when the component mounts
   useEffect(() => {
-    async function fetchChats() {
-      try {
-        const data = await getConnectedUsers(user.user_id);
-        if (Array.isArray(data)) {
-          setActiveConversations(data);
-        }
-      } catch (error) {
-        console.error("Error fetching connected users:", error);
-      }
+    if (user?.user_id) {
+      getConnectedUsers(user.user_id)
+        .then(data => {
+          if (Array.isArray(data)) {
+            setActiveConversations(data);
+          }
+        })
+        .catch(error => console.error("Error fetching connected users:", error));
     }
-    fetchChats();
-  }, [user.user_id]);
+  }, [user?.user_id, getConnectedUsers]);
 
-  // ✅ Scroll to bottom on new message
+  // Use this effect to manage the WebSocket connection whenever the active chat changes
+  useEffect(() => {
+    if (activeConversationId && accessToken) {
+      connect(activeConversationId, accessToken);
+    }
+  }, [activeConversationId, accessToken, connect]);
+
+  // Scroll to bottom on new message
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeConversationId]);
+  }, [messages[activeConversationId]]);
 
-  // ✅ Select chat and connect to WebSocket
+  // --- FIX: SIMPLIFY THE CLICK HANDLER ---
+  // Its only job is to update state. The useEffect above will handle the connection.
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setActiveConversation(chat.conversation_id);
-
-    // Adjust based on your backend auth
-    connect(chat.conversation_id, accessToken); // OR connect(chat.conversation_id);
   };
 
-  // ✅ Send message
+  // Send message
   const handleSend = () => {
     if (!text.trim() || !activeConversationId) return;
     sendMessage(activeConversationId, user.user_id, text.trim());
     setText("");
   };
 
-  const chatMessages = messages[activeConversationId] || [];
+  const chatMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
   return (
     <div className="flex h-screen bg-gray-50 antialiased">

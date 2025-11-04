@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { useChatStore } from "./chatStore";
-import api from '../src/utils/api'
+import api from '../src/utils/api';
 
 let socketRef = { current: null };
 
@@ -9,40 +9,39 @@ export const useSocketStore = create((set, get) => ({
   connectionStatus: "disconnected",
 
   // --- ACTIONS ---
-
-  // for user
   getConversationID: async (customer_id) => {
-    const url = `/chat/get_conversation_id/${customer_id}/`
-    const response = await api(url, {
-      method: "GET"
-    })
-    const data = await response.json()
-    return data.conversation_id
+    const url = `/chat/get_conversation_id/${customer_id}/`;
+    const response = await api(url, { method: "GET" });
+    const data = await response.json();
+    // Standardizing on 'conversation_id'
+    return data.conversation_id;
   },
 
   getConnectedUsers: async (representative_id) => {
-    const url = `/chat/get_connected_users/${representative_id}/`
-    const response = await api(url, {
-      method: "GET"
-    })
-    const data = await response.json()
-    return data
+    const url = `/chat/get_connected_users/${representative_id}/`;
+    const response = await api(url, { method: "GET" });
+    const data = await response.json();
+    return data;
   },
 
   connect: (room_id, accessToken) => {
-    console.log(room_id, typeof(room_id))
-    // const conv_id = convData.conversation_id
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) return;
+    if (!room_id) {
+      console.warn("Connect called with no room_id.");
+      return;
+    }
 
-    console.log("connect called")
+    // --- FIX: ALWAYS CLOSE THE PREVIOUS CONNECTION ---
+    // This is the key to allowing the representative to switch between chats.
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
 
     const wsUrl = `ws://${window.location.host}/ws/chat/${room_id}/?token=${accessToken}`;
-
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("✅ WebSocket connected");
+      console.log(`✅ WebSocket connected to room: ${room_id}`);
       set({ connectionStatus: "connected" });
     };
 
@@ -59,19 +58,12 @@ export const useSocketStore = create((set, get) => ({
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        // This condition is TRUE, because the backend sent back the original object.
         if (data.type === "chat.message") {
-          // THE CRITICAL BUG IS HERE!
-          // You are trying to add the message to the chat store,
-          // but the `addMessage` function is not receiving the correct payload.
-          useChatStore
-            .getState()
-            .addMessage(data.conversation_id, { // This part is correct
-              // But the object you are passing is what is inside 'data'
-              sender: data.sender,
-              text: data.text,
-              timestamp: data.timestamp, // `data.timestamp` is UNDEFINED! You never sent it.
-            });
+          useChatStore.getState().addMessage(data.conversation_id, {
+            sender: data.sender,
+            text: data.text,
+            timestamp: data.timestamp,
+          });
         }
       } catch (err) {
         console.error("Error parsing message:", err);
@@ -86,14 +78,14 @@ export const useSocketStore = create((set, get) => ({
       return;
     }
 
-    // This is the raw data you are sending TO the backend
     const message = JSON.stringify({
       conversation_id: conversationId,
       sender,
       text,
     });
 
-    socket.send(message)
+    socket.send(message);
+    // Correctly removed the local addMessage call here.
   },
 
   disconnect: () => {

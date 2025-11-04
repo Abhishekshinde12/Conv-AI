@@ -103,7 +103,7 @@ const Customer = () => {
         <div ref={messageEndRef} />
 
         {/* Connection notice */}
-        {connectionStatus === "connected" && (
+        {connectionStatus !== "connected" && (
           <div className="text-center text-xs text-gray-500 pt-4">
             — You are now connected to a representative —
           </div>
