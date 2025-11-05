@@ -1,11 +1,9 @@
 import { create } from "zustand";
 
 export const useChatStore = create((set, get) => ({
-  // --- STATE ---
+
   activeConversationId: null,
   messages: {}, // { conversationId: [msg1, msg2, ...] }
-
-  // --- ACTIONS ---
 
   // Set active conversation
   setActiveConversation: (conversationId) => set({ activeConversationId: conversationId }),

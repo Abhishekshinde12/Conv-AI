@@ -1,3 +1,5 @@
+# contains the LLM for analytics with structured output enabled
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 from typing import Literal

@@ -1,3 +1,5 @@
+# This is like an middleware for authentication of the user in the websockets
+
 from channels.db import database_sync_to_async
 from authapp.models import MyUser
 from django.contrib.auth.models import AnonymousUser
@@ -21,6 +23,8 @@ def get_user(user_id):
         # Handles cases where user doesn't exist or ID is not a valid UUID
         return AnonymousUser()
 
+
+
 class JWTAuthMiddleware:
     """
     Custom middleware that authenticates a user via a JWT access token
@@ -30,13 +34,14 @@ class JWTAuthMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        # getting the access token that is passed as query parameter to the socket url
+        # so this query parameter is stored in the query_string variable
         query_string = scope.get("query_string", b"").decode('utf-8')
         query_params = parse_qs(query_string)
         token = query_params.get("token", [None])[0]
 
         if token:
             try:
-                # --- THIS IS THE FIX ---
                 # 1. Use the signing key that Simple JWT is configured to use
                 signing_key = api_settings.SIGNING_KEY
 
@@ -49,6 +54,7 @@ class JWTAuthMiddleware:
                 user_id_claim = api_settings.USER_ID_CLAIM
                 user_id = payload.get(user_id_claim)
 
+                # check if user with the id in the token exists or not
                 if user_id:
                     scope['user'] = await get_user(user_id)
                 else:

@@ -1,4 +1,3 @@
-// src/pages/Customer.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { Send, User } from "lucide-react";
 import { useChatStore } from "../../store/chatStore";
@@ -9,12 +8,12 @@ const Customer = () => {
   const { messages, addMessage, activeConversationId, setActiveConversation } = useChatStore();
   const { connect, sendMessage, connectionStatus, getConversationID } = useSocketStore();
   const {user, accessToken} = useAuthStore()
-  // const [conversationId, setConversationId] = useState("")
-
   const [text, setText] = useState("");
   const messageEndRef = useRef(null);
 
+
   // Connect WebSocket and set conversation on mount
+  // get any of the representative and get the conversation_id between them and connect to socket
   useEffect(() => {
     // Only run this effect if we have the user and token.
     if (user?.user_id && accessToken) {
@@ -39,19 +38,23 @@ const Customer = () => {
     // This effect should only re-run if the user or token changes.
   }, [user?.user_id, accessToken, getConversationID, connect]);
 
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages[activeConversationId]]);
 
-  // Handle sending a message
+
+  // Handle sending a message to the socket
   const handleSend = () => {
     if (!text.trim()) return;
     sendMessage(activeConversationId, user.user_id, text.trim());
     setText("");
   };
 
+
   const chatMessages = messages[activeConversationId] || [];
+
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 antialiased">

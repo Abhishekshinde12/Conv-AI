@@ -2,6 +2,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from .models import MyUser
 
+# Original Serializer - returns only tokens
+# but here we are also returning user data along with tokens
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     # using email for auth
     username_field = 'email'
@@ -23,6 +25,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return user_data
         
 
+# Serializer for user reigstration
 class MyUserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 

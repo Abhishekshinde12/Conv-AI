@@ -55,7 +55,7 @@ const Representative = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json", // ✅ REQUIRED
+            "Content-Type": "application/json", 
           },
           body: JSON.stringify({messages: messages[conversationId] || []})
       });

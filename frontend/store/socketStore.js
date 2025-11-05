@@ -5,10 +5,9 @@ import api from '../src/utils/api';
 let socketRef = { current: null };
 
 export const useSocketStore = create((set, get) => ({
-  // --- STATE ---
   connectionStatus: "disconnected",
 
-  // --- ACTIONS ---
+  // function to get one of the reprsentatives to connect to 
   getConversationID: async (customer_id) => {
     const url = `/chat/get_conversation_id/${customer_id}/`;
     const response = await api(url, { method: "GET" });
@@ -17,6 +16,7 @@ export const useSocketStore = create((set, get) => ({
     return data.conversation_id;
   },
 
+  // getting the list of users with whom the current reprsentative had conversation
   getConnectedUsers: async (representative_id) => {
     const url = `/chat/get_connected_users/${representative_id}/`;
     const response = await api(url, { method: "GET" });
@@ -24,14 +24,15 @@ export const useSocketStore = create((set, get) => ({
     return data;
   },
 
+  // make the socket connection
   connect: (room_id, accessToken) => {
     if (!room_id) {
       console.warn("Connect called with no room_id.");
       return;
     }
 
-    // --- FIX: ALWAYS CLOSE THE PREVIOUS CONNECTION ---
     // This is the key to allowing the representative to switch between chats.
+    // Close earlier connections to start new ones for chatting with new users
     if (socketRef.current) {
       socketRef.current.close();
     }
@@ -57,7 +58,10 @@ export const useSocketStore = create((set, get) => ({
 
     socket.onmessage = (event) => {
       try {
+        // get the event data 
         const data = JSON.parse(event.data);
+        // if the type of event = chat.message => indicate a chat message is sent
+        // so handle it appropriately by storing it in the chatstore
         if (data.type === "chat.message") {
           useChatStore.getState().addMessage(data.conversation_id, {
             sender: data.sender,
@@ -85,7 +89,6 @@ export const useSocketStore = create((set, get) => ({
     });
 
     socket.send(message);
-    // Correctly removed the local addMessage call here.
   },
 
   disconnect: () => {

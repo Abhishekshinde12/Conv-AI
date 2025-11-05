@@ -25,7 +25,6 @@ const useAuthStore = create((set, get) => ({
     // register function to handle the registration of new user
     register: async ({ first_name, last_name, email, password, user_type }) => {
         try {
-
             const url = `/auth/user_register/`
             const response = await fetch(url, {
                 method: "POST",

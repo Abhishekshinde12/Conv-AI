@@ -7,7 +7,7 @@ const ProtectedRoutes = () => {
 
     // If still checking authentication, don't redirect yet
     if (isAuthLoading) {
-        return null; // Or a loading spinner, your choice. App.jsx handles the global loading.
+        return null; // Or a loader can be added here
     }
 
     return isAuthenticated ? <Outlet /> : <Navigate to='/login' />;

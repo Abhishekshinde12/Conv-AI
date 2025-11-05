@@ -11,11 +11,11 @@ class Conversation(models.Model):
     class Meta:
         unique_together = ('user1', 'user2')
 
-
     def __str__(self):
         return f"Conversation ID : {self.id} between {self.user1_id} and {self.user2_id}"
     
 
+# using conversation_id - can fetch all the messages occurred between a particular customer and reprsentative
 class Messages(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, null=False)
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)

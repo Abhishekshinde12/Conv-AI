@@ -9,11 +9,15 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 
 
+# User Registration View
 class MyUserRegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = MyUserRegistrationSerializer
 
 
+# Token Pair generation view
+# here we send access token in response
+# and we set refresh token as an http only cookie
 class MyTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class = MyTokenObtainPairSerializer
@@ -39,9 +43,9 @@ class MyTokenObtainPairView(TokenObtainPairView):
             key='refresh_token',
             value=data['refresh_token'],
             httponly=True,
-            secure=False, # when send to True, sent only over HTTPS
+            secure=False, # when set to True, sent only over HTTPS
             samesite='Lax', # helps prevent CSRF (use 'Lax' if cross-domain)
-            max_age=7 * 24 * 60 * 60,  # 7 days
+            max_age=7 * 24 * 60 * 60,  # 7 days expiry
             path="/",  # accessible throughout domain
         )
         return response
@@ -52,6 +56,7 @@ class MyTokenRefreshView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        # get the cookie
         refresh_token = request.COOKIES.get("refresh_token")
         
         # if no token return error
@@ -86,6 +91,7 @@ class LogoutView(APIView):
         return response
     
 
+# temp function such to check working
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def tempFunc(request):

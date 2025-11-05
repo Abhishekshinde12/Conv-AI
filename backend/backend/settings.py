@@ -137,8 +137,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-
+# User model configuration
 AUTH_USER_MODEL = 'authapp.MyUser'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -155,6 +156,7 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY
 }
 
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # when set true cookies will be allowed in the cross-site HTTP request
 CORS_ALLOW_CREDENTIALS = True
@@ -168,6 +170,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
 ]
 
+
+# Django Channels Configuration
 ASGI_APPLICATION = 'backend.asgi.application'
 CHANNEL_LAYERS = {
     "default": {

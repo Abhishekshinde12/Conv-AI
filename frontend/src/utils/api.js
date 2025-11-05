@@ -3,7 +3,8 @@
 import useAuthStore from "../../store/authStore";
 
 const api = async (url, options = {}) => {
-    const authStore = useAuthStore.getState(); // Get current state outside React component
+    // Get current state outside React component
+    const authStore = useAuthStore.getState(); 
 
     // Add authorization header if access token exists and is not already set
     if (authStore.accessToken && !options.headers?.Authorization) {
@@ -26,8 +27,6 @@ const api = async (url, options = {}) => {
             const newAccessToken = await authStore.getNewAccessToken(); // Try to get a new token
             console.log("Access token refreshed. Retrying original request...");
 
-            // *** CHANGED PART START ***
-
             // Create a new options object for the retry request to avoid mutation.
             const retryOptions = {
                 ...options, // Copy all original options (method, body, etc.)
@@ -39,8 +38,6 @@ const api = async (url, options = {}) => {
             };
             
             response = await fetch(url, retryOptions); // Retry the request with the new options
-
-            // *** CHANGED PART END ***
 
         } catch (error) {
             console.error("Refresh token failed, redirecting to login:", error);
